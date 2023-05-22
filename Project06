@@ -10,14 +10,14 @@ print("뿅")
 
 # 내 셀카 사진 불러오기
 import os
-my_image_path = os.getenv('HOME')+'/aiffel/camera_sticker/images/image.png'
-img_bgr = cv2.imread(my_image_path)    #- OpenCV로 이미지를 읽어서
-img_bgr = cv2.resize(img_bgr, (640, 360))    # 640x360의 크기로 Resize
-img_show = img_bgr.copy()      #- 출력용 이미지 별도 보관
+my_image_path = os.getenv('HOME')+'/aiffel/camera_sticker/images/image1.jpg'
+img_bgr = cv2.imread(my_image_path)   
+img_bgr = cv2.resize(img_bgr, (640, 360))   
+img_show = img_bgr.copy()     
 plt.imshow(img_bgr)
 plt.show()
 
-# plt.imshow 이전에 RGB 이미지로 바꾸는 것을 잊지마세요. 
+# plt.imshow 
 img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
 plt.imshow(img_rgb)
 plt.show()
@@ -27,7 +27,7 @@ detector_hog = dlib.get_frontal_face_detector()   #- detector 선언
 
 #detector를 이용해 얼굴의 bounding box 추출
 img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
-dlib_rects = detector_hog(img_rgb, 1)   #- (image, num of img pyramid)
+dlib_rects = detector_hog(img_rgb, 1)   
 
 #찾은 얼굴 화면에 출력
 print(dlib_rects)   # 찾은 얼굴영역 좌표
@@ -84,8 +84,8 @@ img_sticker = cv2.resize(img_sticker, (w,h))
 print (img_sticker.shape)
 
 
-refined_x = x - w//2 
-refined_y = y - h//2   
+refined_x = x - w/2 
+refined_y = y - h/2   
 print ('(x,y) : (%d,%d)'%(refined_x, refined_y))
 
 
