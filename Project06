@@ -1,0 +1,99 @@
+pip install opencv-python pip install cmake
+pip install dlib
+
+#모듈 불러오기
+import cv2
+import matplotlib.pyplot as plt
+import numpy as np
+import dlib
+print("뿅")
+
+# 내 셀카 사진 불러오기
+import os
+my_image_path = os.getenv('HOME')+'/aiffel/camera_sticker/images/image.png'
+img_bgr = cv2.imread(my_image_path)    #- OpenCV로 이미지를 읽어서
+img_bgr = cv2.resize(img_bgr, (640, 360))    # 640x360의 크기로 Resize
+img_show = img_bgr.copy()      #- 출력용 이미지 별도 보관
+plt.imshow(img_bgr)
+plt.show()
+
+# plt.imshow 이전에 RGB 이미지로 바꾸는 것을 잊지마세요. 
+img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
+plt.imshow(img_rgb)
+plt.show()
+
+#dlib를 활용해 hog detector 선언
+detector_hog = dlib.get_frontal_face_detector()   #- detector 선언
+
+#detector를 이용해 얼굴의 bounding box 추출
+img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
+dlib_rects = detector_hog(img_rgb, 1)   #- (image, num of img pyramid)
+
+#찾은 얼굴 화면에 출력
+print(dlib_rects)   # 찾은 얼굴영역 좌표
+
+for dlib_rect in dlib_rects:
+    l = dlib_rect.left()
+    t = dlib_rect.top()
+    r = dlib_rect.right()
+    b = dlib_rect.bottom()
+
+    cv2.rectangle(img_show, (l,t), (r,b), (0,255,0), 2, lineType=cv2.LINE_AA)
+
+img_show_rgb =  cv2.cvtColor(img_show, cv2.COLOR_BGR2RGB)
+plt.imshow(img_show_rgb)
+plt.show()
+
+#랜드마크
+model_path=os.getenv('HOME')+'/aiffel/camera_sticker/models/shape_predictor_68_face_landmarks.dat'
+landmark_predictor = dlib.shape_predictor(model_path)
+
+list_landmarks = []
+for dlib_rect in dlib_rects:
+    points = landmark_predictor(img_rgb, dlib_rect)
+    list_points = list(map(lambda p: (p.x, p.y), points.parts()))
+    list_landmarks.append(list_points)
+
+print(len(list_landmarks[0]))
+
+for landmark in list_landmarks:
+    for idx, point in enumerate(list_points):
+        cv2.circle(img_show, point, 2, (0, 255, 255), -1) 
+
+img_show_rgb = cv2.cvtColor(img_show, cv2.COLOR_BGR2RGB)
+plt.imshow(img_show_rgb)
+plt.show()
+
+
+#스티커 적용위치 체크 (33번이 코중앙에 오게)
+
+for dlib_rect, landmark in zip(dlib_rects, list_landmarks):
+    print (landmark[33]) 
+    x = landmark[33][0]
+    y = landmark[33][1] 
+    w =  dlib_rect.width()
+    h =  dlib_rect.width()
+    print ('(x,y) : (%d,%d)'%(x,y))
+    print ('(w,h) : (%d,%d)'%(w,h))
+    
+#고양이 수염 불러오기
+import os
+sticker_path = os.getenv('HOME')+'/aiffel/camera_sticker/images/cat-whiskers.png'
+img_sticker = cv2.imread(sticker_path)
+img_sticker = cv2.resize(img_sticker, (w,h))
+print (img_sticker.shape)
+
+
+refined_x = x - w//2 
+refined_y = y - h//2   
+print ('(x,y) : (%d,%d)'%(refined_x, refined_y))
+
+
+#스티커 적용
+
+sticker_area = img_show[refined_y:refined_y + img_sticker.shape[1], refined_x:refined_x+img_sticker.shape[1]]
+img_show[refined_y:refined_y+img_sticker.shape[1], refined_x:refined_x+img_sticker.shape[1]] = \
+    np.where(img_sticker==255,sticker_area,img_sticker).astype(np.uint8)
+
+plt.imshow(cv2.cvtColor(img_show, cv2.COLOR_BGR2RGB))
+plt.show()
